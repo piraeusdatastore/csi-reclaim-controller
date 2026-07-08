@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-08
+
 ### Added
 
 - Initial implementation: an optional CSI sidecar that deletes the backing
@@ -30,4 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [cosign](https://docs.sigstore.dev/) keyless signing and published from GitHub
   Actions.
 
-[Unreleased]: https://github.com/piraeusdatastore/csi-reclaim-controller/commits/main
+[Unreleased]: https://github.com/piraeusdatastore/csi-reclaim-controller/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/piraeusdatastore/csi-reclaim-controller/releases/tag/v0.1.0

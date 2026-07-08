@@ -16,7 +16,7 @@ import (
 
 const (
 	testDriver         = "test.csi.example.com"
-	testFinalizer      = "test.csi.example.com/reclaim-protection"
+	testFinalizer      = "csi-reclaim-controller/test-csi-example-com"
 	testSkipAnnotation = testDriver + "/skip-reclaim"
 	otherDriver        = "other.csi.example.com"
 )

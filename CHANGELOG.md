@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (reusing external-provisioner's deletion-secret annotations) before releasing
   the finalizer. Backing storage of still-bound PVs is never touched, failures
   are retried, and the driver name is discovered from the CSI endpoint. The skip
-  annotation and finalizer default to keys namespaced by the CSI driver name.
+  annotation defaults to a key namespaced by the CSI driver name; the finalizer
+  defaults to `csi-reclaim-controller/<sanitized-driver-name>`, mirroring
+  external-attacher.
 - `<driver-name>/skip-reclaim` annotation (true value) that excludes a PV from
   management. Use it to keep a specific `Retain` volume re-appliable, or to let
   controllers such as linstor-affinity-controller delete and recreate a PV in

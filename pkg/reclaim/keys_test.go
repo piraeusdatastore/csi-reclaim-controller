@@ -11,7 +11,7 @@ func TestSkipAnnotation(t *testing.T) {
 }
 
 func TestFinalizer(t *testing.T) {
-	if got, want := Finalizer(driver), "linstor.csi.linbit.com/reclaim-protection"; got != want {
+	if got, want := Finalizer(driver), "csi-reclaim-controller/linstor-csi-linbit-com"; got != want {
 		t.Errorf("Finalizer(%q) = %q, want %q", driver, got, want)
 	}
 }

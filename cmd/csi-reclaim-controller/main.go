@@ -46,7 +46,7 @@ import (
 // and finalizer default to keys based on the CSI driver name so they are unique
 // per driver.
 var (
-	finalizer      = flag.String("finalizer", "", "Finalizer placed on managed PVs. If empty, defaults to \"<driver-name>/reclaim-protection\".")
+	finalizer      = flag.String("finalizer", "", "Finalizer placed on managed PVs. If empty, defaults to \"csi-reclaim-controller/<sanitized-driver-name>\".")
 	skipAnnotation = flag.String("skip-annotation", "", "PV annotation that, when set to a true value, excludes the PV from reclaiming (used by admins or by controllers that recreate PVs in place). If empty, defaults to \"<driver-name>/skip-reclaim\".")
 	resyncPeriod   = flag.Duration("resync-period", 10*time.Minute, "Resync interval of the PersistentVolume informer.")
 	workerCount    = flag.Int("worker-threads", 5, "Number of concurrent reconcile workers.")

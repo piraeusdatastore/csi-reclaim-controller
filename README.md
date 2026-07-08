@@ -35,8 +35,8 @@ For every PV whose `spec.csi.driver` matches the connected driver **and** whose
 `persistentVolumeReclaimPolicy` is `Retain` **and** which is not skip-annotated,
 the controller:
 
-1. Adds a finalizer (default `<driver-name>/reclaim-protection`) so a delete of
-   the PV is intercepted rather than completing immediately.
+1. Adds a finalizer (default `csi-reclaim-controller/<sanitized-driver-name>`)
+   so a delete of the PV is intercepted rather than completing immediately.
 2. When such a PV is deleted (`deletionTimestamp` set), calls the driver's
    `DeleteVolume()` for `spec.csi.volumeHandle`, using the same deletion-secret
    annotations that external-provisioner records on the PV.
@@ -122,7 +122,7 @@ keys are exported from a dependency-light package:
 import "github.com/piraeusdatastore/csi-reclaim-controller/pkg/reclaim"
 
 skip := reclaim.SkipAnnotation(pv.Spec.CSI.Driver) // "<driver>/skip-reclaim"
-fin  := reclaim.Finalizer(pv.Spec.CSI.Driver)      // "<driver>/reclaim-protection"
+fin  := reclaim.Finalizer(pv.Spec.CSI.Driver)      // "csi-reclaim-controller/<sanitized-driver>"
 if reclaim.ShouldSkip(pv.Annotations, pv.Spec.CSI.Driver) { /* excluded */ }
 ```
 
@@ -138,7 +138,7 @@ The CSI driver name is always discovered from the connected CSI endpoint via
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--skip-annotation` | `<driver>/skip-reclaim` | PV annotation that, when true, excludes the PV from reclaiming. |
-| `--finalizer` | `<driver>/reclaim-protection` | Finalizer placed on managed PVs. |
+| `--finalizer` | `csi-reclaim-controller/<sanitized-driver>` | Finalizer placed on managed PVs. |
 | `--timeout` | `60s` | Timeout for each CSI `DeleteVolume`/`Probe` call. |
 | `--resync-period` | `10m` | PV informer resync interval. |
 | `--worker-threads` | `5` | Concurrent reconcile workers. |

@@ -16,6 +16,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -24,6 +25,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -310,7 +313,7 @@ func (c *Controller) deletionSecrets(ctx context.Context, pv *corev1.PersistentV
 func (c *Controller) addFinalizer(ctx context.Context, pv *corev1.PersistentVolume) error {
 	updated := pv.DeepCopy()
 	updated.Finalizers = append(updated.Finalizers, c.finalizer)
-	if _, err := c.kubeClient.CoreV1().PersistentVolumes().Update(ctx, updated, metav1.UpdateOptions{}); err != nil {
+	if err := c.patchPV(ctx, pv, updated); err != nil {
 		return fmt.Errorf("add finalizer to PV %s: %w", pv.Name, err)
 	}
 	klog.V(4).InfoS("Added reclaim finalizer", "pv", pv.Name)
@@ -322,11 +325,32 @@ func (c *Controller) removeFinalizer(ctx context.Context, pv *corev1.PersistentV
 	updated.Finalizers = slices.DeleteFunc(updated.Finalizers, func(f string) bool {
 		return f == c.finalizer
 	})
-	if _, err := c.kubeClient.CoreV1().PersistentVolumes().Update(ctx, updated, metav1.UpdateOptions{}); err != nil {
+	if err := c.patchPV(ctx, pv, updated); err != nil {
 		return fmt.Errorf("remove finalizer from PV %s: %w", pv.Name, err)
 	}
 	klog.V(4).InfoS("Removed reclaim finalizer", "pv", pv.Name)
 	return nil
+}
+
+// patchPV applies the difference between original and updated as a strategic
+// merge patch. Patching matches the controller's RBAC, which only grants the
+// patch verb, and it narrows the write to just the changed finalizer so a
+// concurrent finalizer edit by another controller is not clobbered.
+func (c *Controller) patchPV(ctx context.Context, original, updated *corev1.PersistentVolume) error {
+	oldData, err := json.Marshal(original)
+	if err != nil {
+		return fmt.Errorf("marshal original PV: %w", err)
+	}
+	newData, err := json.Marshal(updated)
+	if err != nil {
+		return fmt.Errorf("marshal updated PV: %w", err)
+	}
+	patch, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, corev1.PersistentVolume{})
+	if err != nil {
+		return fmt.Errorf("create patch: %w", err)
+	}
+	_, err = c.kubeClient.CoreV1().PersistentVolumes().Patch(ctx, original.Name, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
+	return err
 }
 
 func (c *Controller) eventf(pv *corev1.PersistentVolume, eventType, reason, format string, args ...interface{}) {
